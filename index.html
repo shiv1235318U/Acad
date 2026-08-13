@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Analyzer — Teacher Dashboard</title>
+
+    <link rel="stylesheet" href="sty.css">
+</head>
+
+<body>
+
+    <!-- ================= LOGIN PAGE ================= -->
+    <div id="loginPage" class="login-page">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="brand-icon">AA</div>
+                <div>
+                    <h2>Academic Analyzer</h2>
+                    <span>Teacher Login</span>
+                </div>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input
+                        type="text"
+                        id="loginUsername"
+                        placeholder="Enter username"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        placeholder="Enter password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <p id="loginError" class="login-error hidden"></p>
+
+                <button type="submit" class="primary-button login-btn">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">AA</div>
+            <div>
+                <h2>Academic</h2>
+                <span>Analyzer</span>
+            </div>
+        </div>
+
+        <div class="teacher-profile">
+            <div class="avatar">T</div>
+            <div>
+                <strong>RAMANDEEP SINGH</strong>
+                <small>Academic Dashboard</small>
+            </div>
+        </div>
+
+        <nav>
+            <button class="nav-item active" data-page="dashboard">
+                <span>⌂</span>
+                Dashboard
+            </button>
+
+            <button class="nav-item" data-page="students">
+                <span>👨‍🎓</span>
+                Students
+            </button>
+
+            <button class="nav-item" data-page="marks">
+                <span>📝</span>
+                Enter Marks
+            </button>
+
+            <button class="nav-item" data-page="analysis">
+                <span>📊</span>
+                Performance
+            </button>
+
+            <button class="nav-item" data-page="reports">
+                <span>📄</span>
+                Reports
+            </button>
+
+            <button class="nav-item" data-page="timetable">
+                <span>🗓️</span>
+                Teacher Timetable
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="clearDataBtn" class="danger-outline">
+                🗑 Clear All Data
+            </button>
+            <button id="logoutBtn" class="logout-btn">
+                🚪 Logout
+            </button>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+
+            <div>
+                <button id="mobileMenu" class="mobile-menu">☰</button>
+
+                <h1 id="pageTitle">Teacher Dashboard</h1>
+                <p id="pageSubtitle">
+                    Monitor and analyze your students' academic performance.
+                </p>
+            </div>
+
+            <div class="top-actions">
+                <div class="date-box">
+                    <span>📅</span>
+                    <span id="currentDate"></span>
+                </div>
+
+                <button class="teacher-button">
+                    T
+                </button>
+            </div>
+
+        </header>
+
+
+        <!-- ================= DASHBOARD ================= -->
+        <section id="dashboardPage" class="page active-page">
+
+            <div class="welcome-card">
+
+                <div>
+                    <span class="eyebrow">TEACHER OVERVIEW</span>
+
+                    <h2>
+                        Welcome back, Ramandeep singh 👋
+                    </h2>
+
+                    <p>
+                        Here's a quick overview of your class performance.
+                    </p>
+                </div>
+
+                <div class="welcome-icon">
+                    📚
+                </div>
+
+            </div>
+
+
+            <!-- STAT CARDS -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-icon blue">👨‍🎓</div>
+
+                    <div>
+                        <span>Total Students</span>
+                        <strong id="totalStudents">0</strong>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon green">📈</div>
+
+                    <div>
+                        <span>Class Average</span>
+                        <strong id="classAverage">0%</strong>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">🏆</div>
+
+                    <div>
+                        <span>Top Performer</span>
+                        <strong id="topPerformer">—</strong>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon red">⚠</div>
+
+                    <div>
+                        <span>Needs Attention</span>
+                        <strong id="needsAttention">0</strong>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- DASHBOARD GRID -->
+
+            <div class="dashboard-grid">
+
+                <div class="panel performance-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>Class Performance</h3>
+                            <p>Average marks by subject</p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="subjectChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>Performance Distribution</h3>
+                            <p>Students by performance level</p>
+                        </div>
+                    </div>
+
+                    <div class="distribution">
+
+                        <div class="distribution-row">
+                            <span class="dot excellent"></span>
+                            <span>Excellent</span>
+                            <strong id="excellentCount">0</strong>
+                        </div>
+
+                        <div class="distribution-row">
+                            <span class="dot good"></span>
+                            <span>Good</span>
+                            <strong id="goodCount">0</strong>
+                        </div>
+
+                        <div class="distribution-row">
+                            <span class="dot average"></span>
+                            <span>Average</span>
+                            <strong id="averageCount">0</strong>
+                        </div>
+
+                        <div class="distribution-row">
+                            <span class="dot weak"></span>
+                            <span>Needs Improvement</span>
+                            <strong id="weakCount">0</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT STUDENTS -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Student Overview</h3>
+                        <p>Recently added students</p>
+                    </div>
+
+                    <button class="secondary-button" data-page-target="students">
+                        View All
+                    </button>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Average</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="dashboardStudentTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= STUDENTS ================= -->
+
+        <section id="studentsPage" class="page">
+
+            <div class="page-heading students-actions">
+                <button id="addStudentBtn" class="primary-button">
+                    + Add Student
+                </button>
+            </div>
+
+
+            <div class="toolbar">
+
+                <input
+                    type="text"
+                    id="studentSearch"
+                    placeholder="🔍 Search student..."
+                >
+
+                <select id="classFilter">
+                    <option value="all">All Classes</option>
+                    <option value="10-A">10-A</option>
+                    <option value="10-B">10-B</option>
+                    <option value="11-A">11-A</option>
+                    <option value="11-B">11-B</option>
+                    <option value="12-A">12-A</option>
+                    <option value="12-B">12-B</option>
+                </select>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Roll No.</th>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Average</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="studentsTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= MARKS ================= -->
+
+        <section id="marksPage" class="page">
+
+            <div class="panel marks-panel">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Student</label>
+
+                        <select id="marksStudent">
+                            <option value="">Select Student</option>
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>Exam</label>
+
+                        <select id="examType">
+                            <option value="Unit Test">Unit Test</option>
+                            <option value="Half Yearly">Half Yearly</option>
+                            <option value="Pre-Board">Pre-Board</option>
+                            <option value="Final Exam">Final Exam</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <h3 class="form-section-title">
+                    Subject Marks
+                </h3>
+
+
+                <div class="marks-grid">
+
+                    <div class="mark-input">
+                        <label>English</label>
+                        <input type="number" id="english" min="0" max="100" placeholder="0">
+                    </div>
+
+                    <div class="mark-input">
+                        <label>Mathematics</label>
+                        <input type="number" id="maths" min="0" max="100" placeholder="0">
+                    </div>
+
+                    <div class="mark-input">
+                        <label>Science</label>
+                        <input type="number" id="science" min="0" max="100" placeholder="0">
+                    </div>
+
+                    <div class="mark-input">
+                        <label>Social Science</label>
+                        <input type="number" id="sst" min="0" max="100" placeholder="0">
+                    </div>
+
+                    <div class="mark-input">
+                        <label>Hindi</label>
+                        <input type="number" id="hindi" min="0" max="100" placeholder="0">
+                    </div>
+
+                    <div class="mark-input">
+                        <label>Computer / AI</label>
+                        <input type="number" id="computer" min="0" max="100" placeholder="0">
+                    </div>
+
+                </div>
+
+
+                <div class="marks-summary">
+
+                    <div>
+                        <span>Average</span>
+                        <strong id="liveAverage">0%</strong>
+                    </div>
+
+                    <div>
+                        <span>Total</span>
+                        <strong id="liveTotal">0 / 600</strong>
+                    </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button id="resetMarks" class="secondary-button">
+                        Reset
+                    </button>
+
+                    <button id="saveMarks" class="primary-button">
+                        Save Marks
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ANALYSIS ================= -->
+
+        <section id="analysisPage" class="page">
+
+            <div class="analysis-grid">
+
+                <div class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>Subject Analysis</h3>
+                            <p>Class average for each subject</p>
+                        </div>
+                    </div>
+
+                    <div id="subjectAnalysis"></div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>Class Insights</h3>
+                            <p>Automatically generated observations</p>
+                        </div>
+                    </div>
+
+                    <div id="insights"></div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Student Ranking</h3>
+                        <p>Based on average marks</p>
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Average</th>
+                                <th>Level</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="rankingTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= REPORTS ================= -->
+
+        <section id="reportsPage" class="page">
+
+            <div class="panel">
+
+                <div class="form-group report-select">
+
+                    <label>Select Student</label>
+
+                    <select id="reportStudent">
+                        <option value="">Select Student</option>
+                    </select>
+
+                </div>
+
+
+                <div id="reportContent" class="report-content hidden">
+
+                    <div class="report-header">
+
+                        <div>
+                            <span class="eyebrow">ACADEMIC REPORT</span>
+
+                            <h2 id="reportName">
+                                Student Name
+                            </h2>
+
+                            <p id="reportClass">
+                                Class
+                            </p>
+                        </div>
+
+                        <div class="report-score">
+                            <span>Overall</span>
+                            <strong id="reportAverage">0%</strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="report-subjects">
+
+                        <div class="report-subject">
+                            <span>English</span>
+                            <strong id="reportEnglish">0</strong>
+                        </div>
+
+                        <div class="report-subject">
+                            <span>Mathematics</span>
+                            <strong id="reportMaths">0</strong>
+                        </div>
+
+                        <div class="report-subject">
+                            <span>Science</span>
+                            <strong id="reportScience">0</strong>
+                        </div>
+
+                        <div class="report-subject">
+                            <span>Social Science</span>
+                            <strong id="reportSST">0</strong>
+                        </div>
+
+                        <div class="report-subject">
+                            <span>Hindi</span>
+                            <strong id="reportHindi">0</strong>
+                        </div>
+
+                        <div class="report-subject">
+                            <span>Computer / AI</span>
+                            <strong id="reportComputer">0</strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="report-chart-panel">
+                        <div class="report-chart-header">
+                            <div>
+                                <h3>Subject-wise Performance</h3>
+                                <p>Visual comparison of this student's marks.</p>
+                            </div>
+                        </div>
+                        <div class="report-chart-container">
+                            <canvas id="reportSubjectChart"></canvas>
+                        </div>
+                    </div>
+
+
+                    <div class="report-insight">
+
+                        <h3>Teacher's Analysis</h3>
+
+                        <p id="reportInsight">
+                            Select a student to generate analysis.
+                        </p>
+
+                    </div>
+
+
+                    <button id="printReport" class="primary-button">
+                        🖨 Print Report
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= TEACHER TIMETABLE ================= -->
+        <section id="timetablePage" class="page">
+
+            <div class="panel timetable-panel">
+                <div class="day-tabs" id="dayTabs">
+                    <button class="day-tab active" data-day="Monday">Monday</button>
+                    <button class="day-tab" data-day="Tuesday">Tuesday</button>
+                    <button class="day-tab" data-day="Wednesday">Wednesday</button>
+                    <button class="day-tab" data-day="Thursday">Thursday</button>
+                    <button class="day-tab" data-day="Friday">Friday</button>
+                    <button class="day-tab" data-day="Saturday">Saturday</button>
+                </div>
+
+                <div class="timetable-heading">
+                    <div>
+                        <h3 id="timetableDayTitle">Monday</h3>
+                        <p>Teaching schedule for the selected day</p>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="timetable-table">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>Time</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Room</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= ADD STUDENT MODAL ================= -->
+
+    <div id="studentModal" class="modal">
+
+        <div class="modal-box">
+
+            <div class="modal-header">
+
+                <div>
+                    <h2>Add Student</h2>
+                    <p>Create a new student record.</p>
+                </div>
+
+                <button id="closeModal" class="close-button">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="studentForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Student Name</label>
+                        <input
+                            type="text"
+                            id="studentName"
+                            required
+                            placeholder="Enter student name"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label>Roll Number</label>
+                        <input
+                            type="text"
+                            id="rollNumber"
+                            required
+                            placeholder="Enter roll number"
+                        >
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Class</label>
+
+                    <select id="studentClass" required>
+
+                        <option value="">
+                            Select Class
+                        </option>
+
+                        <option value="10-A">10-A</option>
+                        <option value="10-B">10-B</option>
+                        <option value="11-A">11-A</option>
+                        <option value="11-B">11-B</option>
+                        <option value="12-A">12-A</option>
+                        <option value="12-B">12-B</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        id="cancelStudent"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Add Student
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="op.js"></script>
+
+</body>
+</html>
