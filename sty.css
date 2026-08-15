@@ -926,6 +926,21 @@ tr:last-child td {
 }
 
 
+.report-exam-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.exam-progress-chart {
+    height: 260px;
+}
+
 .report-select {
     max-width: 400px;
 }
@@ -1429,5 +1444,17 @@ body.logged-in .login-page {
 
     .day-tab {
         flex: 0 0 auto;
+    }
+}
+
+
+/* ================= PHONE BAR CHARTS ================= */
+@media (max-width: 600px) {
+    .chart-container {
+        height: 210px;
+    }
+
+    .report-chart-container {
+        height: 210px;
     }
 }
