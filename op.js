@@ -2205,8 +2205,8 @@ function drawExamProgressChart(student) {
     const ctx = canvas.getContext("2d");
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const width = Math.max(rect.width, 300);
-    const height = 260;
+    const width = Math.max(rect.width, 1);
+    const height = width <= 600 ? 210 : 260;
 
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -2221,6 +2221,44 @@ function drawExamProgressChart(student) {
         ) / subjects.length;
         return [exam, average];
     });
+
+    /* MOBILE: compact horizontal progress bars, matching the phone UI */
+    if (width <= 600) {
+        const left = 78;
+        const right = 46;
+        const top = 8;
+        const rowHeight = 45;
+        const barHeight = 7;
+        const barWidth = Math.max(width - left - right, 80);
+
+        data.forEach(([label, value], index) => {
+            const y = top + index * rowHeight + 8;
+
+            ctx.fillStyle = "#374151";
+            ctx.font = "10px Arial";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, left - 10, y + barHeight / 2);
+
+            ctx.fillStyle = "#e5e7eb";
+            ctx.beginPath();
+            ctx.roundRect(left, y, barWidth, barHeight, 4);
+            ctx.fill();
+
+            const filledWidth = (Math.max(0, Math.min(value, 100)) / 100) * barWidth;
+            ctx.fillStyle = "#2563eb";
+            ctx.beginPath();
+            ctx.roundRect(left, y, filledWidth, barHeight, 4);
+            ctx.fill();
+
+            ctx.fillStyle = "#374151";
+            ctx.font = "600 10px Arial";
+            ctx.textAlign = "left";
+            ctx.fillText(Number(value).toFixed(1) + "%", left + barWidth + 8, y + barHeight / 2);
+        });
+
+        return;
+    }
 
     const left = 42;
     const right = 18;
