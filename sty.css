@@ -919,7 +919,8 @@ tr:last-child td {
     height: 280px;
 }
 
-#reportSubjectChart {
+#reportSubjectChart,
+#reportExamChart {
     width: 100%;
     height: 100%;
     display: block;
