@@ -72,9 +72,55 @@ const defaultStudents = [
 ];
 
 
+const examTypes = [
+    "Unit Test",
+    "Midterm",
+    "Pre-Final",
+    "Final"
+];
+
+function emptyMarks() {
+    return {
+        english: 0,
+        maths: 0,
+        science: 0,
+        sst: 0,
+        hindi: 0,
+        computer: 0
+    };
+}
+
+function normalizeExamMarks(student) {
+    if (!student.marksByExam) {
+        student.marksByExam = {};
+        examTypes.forEach(exam => {
+            student.marksByExam[exam] = emptyMarks();
+        });
+
+        // Existing marks are treated as the student's Final exam marks
+        // so older saved data is not lost.
+        if (student.marks) {
+            student.marksByExam["Final"] = { ...emptyMarks(), ...student.marks };
+        }
+    } else {
+        examTypes.forEach(exam => {
+            student.marksByExam[exam] = {
+                ...emptyMarks(),
+                ...(student.marksByExam[exam] || {})
+            };
+        });
+    }
+
+    if (!student.marks) {
+        student.marks = { ...student.marksByExam["Final"] };
+    }
+}
+
 let students =
     JSON.parse(localStorage.getItem("academicAnalyzerStudents"))
     || defaultStudents;
+
+students.forEach(normalizeExamMarks);
 
 
 /* =========================================================
@@ -1116,6 +1162,14 @@ function setupMarksForm() {
 
 
     document
+        .getElementById("examType")
+        .addEventListener(
+            "change",
+            loadStudentMarks
+        );
+
+
+    document
         .getElementById("saveMarks")
         .addEventListener(
             "click",
@@ -1217,12 +1271,20 @@ function loadStudentMarks() {
     if (!student) return;
 
 
+    normalizeExamMarks(student);
+
+    const examType =
+        document.getElementById("examType").value || "Unit Test";
+
+    const examMarks =
+        student.marksByExam[examType] || emptyMarks();
+
     subjects.forEach(subject => {
 
         document.getElementById(
             subject.key
         ).value =
-            student.marks[subject.key] || 0;
+            examMarks[subject.key] || 0;
 
     });
 
@@ -1313,6 +1375,13 @@ function saveMarks() {
     if (!student) return;
 
 
+    normalizeExamMarks(student);
+
+    const examType =
+        document.getElementById("examType").value || "Unit Test";
+
+    const examMarks = emptyMarks();
+
     subjects.forEach(subject => {
 
         let value =
@@ -1330,10 +1399,16 @@ function saveMarks() {
             );
 
 
-        student.marks[subject.key] =
-            value;
+        examMarks[subject.key] = value;
 
     });
+
+    student.marksByExam[examType] = examMarks;
+
+    // Keep the existing dashboard/student records based on Final marks.
+    if (examType === "Final") {
+        student.marks = { ...examMarks };
+    }
 
 
     saveData();
@@ -1710,245 +1785,115 @@ function renderRanking() {
 
 function drawChart() {
 
-    const canvas =
-        document.getElementById(
-            "subjectChart"
-        );
-
-
+    const canvas = document.getElementById("subjectChart");
     if (!canvas) return;
 
-
-    const container =
-        canvas.parentElement;
-
-
-    const width =
-        container.clientWidth;
-
-
-    const height =
-        container.clientHeight;
-
-
-    const dpr =
-        window.devicePixelRatio || 1;
-
-
-    canvas.width =
-        width * dpr;
-
-
-    canvas.height =
-        height * dpr;
-
-
-    canvas.style.width =
-        width + "px";
-
-
-    canvas.style.height =
-        height + "px";
-
-
-    const ctx =
-        canvas.getContext("2d");
-
-
-    ctx.scale(dpr, dpr);
-
-
-    ctx.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-    const values =
-        subjects.map(
-            subject =>
-                getSubjectAverage(
-                    subject.key
-                )
-        );
-
-
-    const max =
-        100;
-
-
-    const left =
-        50;
-
-    const right =
-        20;
-
-    const top =
-        20;
-
-    const bottom =
-        45;
-
-
-    const chartWidth =
-        width - left - right;
-
-
-    const chartHeight =
-        height - top - bottom;
-
-
-    /* GRID */
-
-    ctx.strokeStyle =
-        "#e5e7eb";
-
-    ctx.lineWidth = 1;
-
-
-    for (
-        let value = 0;
-        value <= 100;
-        value += 20
-    ) {
-
-        const y =
-            top +
-            chartHeight -
-            (value / max) *
-                chartHeight;
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            left,
-            y
-        );
-
-        ctx.lineTo(
-            width - right,
-            y
-        );
-
-        ctx.stroke();
-
-
-        ctx.fillStyle =
-            "#6b7280";
-
-        ctx.font =
-            "11px Arial";
-
-        ctx.fillText(
-            value,
-            15,
-            y + 4
-        );
-
-    }
-
-
-    /* BARS */
-
-    const barGap = 18;
-
-    const barWidth =
-        (
-            chartWidth -
-            barGap * (values.length - 1)
-        ) /
-        values.length;
-
-
-    values.forEach(
-        (value, index) => {
-
-            const barHeight =
-                (
-                    value / max
-                ) *
-                chartHeight;
-
-
-            const x =
-                left +
-                index *
-                (
-                    barWidth +
-                    barGap
-                );
-
-
-            const y =
-                top +
-                chartHeight -
-                barHeight;
-
-
-            ctx.fillStyle =
-                "#4f46e5";
-
-
+    const container = canvas.parentElement;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const isMobile = width <= 600;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const values = subjects.map(subject => getSubjectAverage(subject.key));
+    const max = 100;
+
+    /* MOBILE: compact horizontal progress bars */
+    if (isMobile) {
+        const left = 82;
+        const right = 42;
+        const top = 8;
+        const rowHeight = 31;
+        const barHeight = 7;
+        const barWidth = Math.max(width - left - right, 100);
+
+        values.forEach((value, index) => {
+            const y = top + index * rowHeight + 8;
+            const label = subjects[index].name;
+            const displayLabel = label.length > 15 ? label.substring(0, 14) + "…" : label;
+
+            ctx.fillStyle = "#374151";
+            ctx.font = "10px Arial";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(displayLabel, left - 10, y + barHeight / 2);
+
+            ctx.fillStyle = "#e5e7eb";
             ctx.beginPath();
-
-            ctx.roundRect(
-                x,
-                y,
-                barWidth,
-                barHeight,
-                5
-            );
-
+            ctx.roundRect(left, y, barWidth, barHeight, 4);
             ctx.fill();
 
+            const filledWidth = (Math.max(0, Math.min(value, max)) / max) * barWidth;
+            ctx.fillStyle = "#2563eb";
+            ctx.beginPath();
+            ctx.roundRect(left, y, filledWidth, barHeight, 4);
+            ctx.fill();
 
-            ctx.fillStyle =
-                "#374151";
+            ctx.fillStyle = "#374151";
+            ctx.font = "600 10px Arial";
+            ctx.textAlign = "left";
+            ctx.fillText(value.toFixed(1) + "%", left + barWidth + 8, y + barHeight / 2);
+        });
 
-            ctx.font =
-                "bold 11px Arial";
+        return;
+    }
 
-            ctx.textAlign =
-                "center";
+    /* DESKTOP / LAPTOP: original vertical bar chart */
+    const left = 50;
+    const right = 20;
+    const top = 20;
+    const bottom = 45;
+    const chartWidth = width - left - right;
+    const chartHeight = height - top - bottom;
 
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.lineWidth = 1;
 
-            ctx.fillText(
-                value.toFixed(0) + "%",
-                x + barWidth / 2,
-                y - 7
-            );
+    for (let value = 0; value <= 100; value += 20) {
+        const y = top + chartHeight - (value / max) * chartHeight;
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(width - right, y);
+        ctx.stroke();
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "11px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(value, 15, y + 4);
+    }
 
+    const barGap = 18;
+    const barWidth = (chartWidth - barGap * (values.length - 1)) / values.length;
 
-            ctx.fillStyle =
-                "#6b7280";
+    values.forEach((value, index) => {
+        const barHeight = (value / max) * chartHeight;
+        const x = left + index * (barWidth + barGap);
+        const y = top + chartHeight - barHeight;
 
-            ctx.font =
-                "10px Arial";
+        ctx.fillStyle = "#4f46e5";
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight, 5);
+        ctx.fill();
 
+        ctx.fillStyle = "#374151";
+        ctx.font = "bold 11px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(value.toFixed(0) + "%", x + barWidth / 2, y - 7);
 
-            const label =
-                subjects[index].name;
-
-
-            ctx.fillText(
-                label.length > 12
-                    ? label.substring(0, 11) + "…"
-                    : label,
-                x + barWidth / 2,
-                height - 15
-            );
-
-        }
-    );
-
-
-    ctx.textAlign =
-        "left";
-
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "10px Arial";
+        const label = subjects[index].name;
+        ctx.fillText(label.length > 12 ? label.substring(0, 11) + "…" : label, x + barWidth / 2, height - 15);
+    });
 }
+
 
 
 /* =========================================================
@@ -1959,6 +1904,14 @@ function setupReport() {
 
     document
         .getElementById("reportStudent")
+        .addEventListener(
+            "change",
+            generateReport
+        );
+
+
+    document
+        .getElementById("reportExam")
         .addEventListener(
             "change",
             generateReport
@@ -2065,78 +2018,72 @@ function generateReport() {
     if (!student) return;
 
 
+    normalizeExamMarks(student);
+
+    const examType =
+        document.getElementById("reportExam").value || "Unit Test";
+
+    const marks =
+        student.marksByExam[examType] || emptyMarks();
+
+
     report.classList.remove("hidden");
 
 
+    const values = subjects.map(subject =>
+        Number(marks[subject.key]) || 0
+    );
+
     const average =
-        getAverage(student);
+        values.reduce((sum, value) => sum + value, 0) / subjects.length;
 
 
-    document.getElementById(
-        "reportName"
-    ).textContent =
-        student.name;
+    document.getElementById("reportName").textContent = student.name;
 
-
-    document.getElementById(
-        "reportClass"
-    ).textContent =
+    document.getElementById("reportClass").textContent =
         `Roll No. ${student.roll} • Class ${student.className}`;
 
+    document.getElementById("reportExamName").textContent = examType;
 
-    document.getElementById(
-        "reportAverage"
-    ).textContent =
+    document.getElementById("reportAverage").textContent =
         average.toFixed(1) + "%";
 
+    document.getElementById("reportEnglish").textContent = marks.english;
+    document.getElementById("reportMaths").textContent = marks.maths;
+    document.getElementById("reportScience").textContent = marks.science;
+    document.getElementById("reportSST").textContent = marks.sst;
+    document.getElementById("reportHindi").textContent = marks.hindi;
+    document.getElementById("reportComputer").textContent = marks.computer;
 
-    document.getElementById(
-        "reportEnglish"
-    ).textContent =
-        student.marks.english;
+    document.getElementById("reportInsight").textContent =
+        generateExamInsight(student, examType, marks);
 
-
-    document.getElementById(
-        "reportMaths"
-    ).textContent =
-        student.marks.maths;
-
-
-    document.getElementById(
-        "reportScience"
-    ).textContent =
-        student.marks.science;
-
-
-    document.getElementById(
-        "reportSST"
-    ).textContent =
-        student.marks.sst;
-
-
-    document.getElementById(
-        "reportHindi"
-    ).textContent =
-        student.marks.hindi;
-
-
-    document.getElementById(
-        "reportComputer"
-    ).textContent =
-        student.marks.computer;
-
-
-    document.getElementById(
-        "reportInsight"
-    ).textContent =
-        generateStudentInsight(student);
-
-    drawReportChart(student);
+    drawReportChart(student, examType);
+    drawExamProgressChart(student);
 
 }
 
 
-function drawReportChart(student) {
+function generateExamInsight(student, examType, marks) {
+
+    const entries = subjects.map(subject => ({
+        name: subject.name,
+        value: Number(marks[subject.key]) || 0
+    }));
+
+    const strongest = entries.reduce((a, b) => a.value >= b.value ? a : b);
+    const weakest = entries.reduce((a, b) => a.value <= b.value ? a : b);
+
+    const average =
+        entries.reduce((sum, item) => sum + item.value, 0) / entries.length;
+
+    return `${examType}: ${student.name} scored an average of ${average.toFixed(1)}%. Strongest subject: ${strongest.name} (${strongest.value}). Focus area: ${weakest.name} (${weakest.value}).`;
+
+}
+
+
+function drawReportChart(student, examType) {
+
 
     const canvas = document.getElementById("reportSubjectChart");
     if (!canvas) return;
@@ -2145,21 +2092,62 @@ function drawReportChart(student) {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     const width = Math.max(rect.width, 300);
-    const height = 280;
+    const height = width <= 600 ? 210 : 280;
 
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
+    normalizeExamMarks(student);
+    const marks = student.marksByExam[examType] || emptyMarks();
+
     const data = [
-        ["English", student.marks.english],
-        ["Maths", student.marks.maths],
-        ["Science", student.marks.science],
-        ["SST", student.marks.sst],
-        ["Hindi", student.marks.hindi],
-        ["Computer", student.marks.computer]
+        ["English", marks.english],
+        ["Maths", marks.maths],
+        ["Science", marks.science],
+        ["SST", marks.sst],
+        ["Hindi", marks.hindi],
+        ["Computer", marks.computer]
     ];
+
+    /* MOBILE: compact horizontal progress bars */
+    if (width <= 600) {
+        const left = 82;
+        const right = 42;
+        const top = 8;
+        const rowHeight = 31;
+        const barHeight = 7;
+        const barWidth = Math.max(width - left - right, 100);
+
+        data.forEach(([label, value], index) => {
+            const y = top + index * rowHeight + 8;
+
+            ctx.fillStyle = "#374151";
+            ctx.font = "10px Arial";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, left - 10, y + barHeight / 2);
+
+            ctx.fillStyle = "#e5e7eb";
+            ctx.beginPath();
+            ctx.roundRect(left, y, barWidth, barHeight, 4);
+            ctx.fill();
+
+            const filledWidth = (Math.max(0, Math.min(value, 100)) / 100) * barWidth;
+            ctx.fillStyle = "#2563eb";
+            ctx.beginPath();
+            ctx.roundRect(left, y, filledWidth, barHeight, 4);
+            ctx.fill();
+
+            ctx.fillStyle = "#374151";
+            ctx.font = "600 10px Arial";
+            ctx.textAlign = "left";
+            ctx.fillText(Number(value).toFixed(1) + "%", left + barWidth + 8, y + barHeight / 2);
+        });
+
+        return;
+    }
 
     const left = 42;
     const right = 18;
@@ -2198,6 +2186,79 @@ function drawReportChart(student) {
         ctx.font = "600 11px Segoe UI, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(value, x + barW / 2, Math.max(y - 7, 12));
+
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "11px Segoe UI, sans-serif";
+        ctx.fillText(label, x + barW / 2, height - 18);
+    });
+
+}
+
+
+function drawExamProgressChart(student) {
+
+    const canvas = document.getElementById("reportExamChart");
+    if (!canvas) return;
+
+    normalizeExamMarks(student);
+
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(rect.width, 300);
+    const height = 260;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const data = examTypes.map(exam => {
+        const marks = student.marksByExam[exam] || emptyMarks();
+        const average = subjects.reduce(
+            (sum, subject) => sum + (Number(marks[subject.key]) || 0),
+            0
+        ) / subjects.length;
+        return [exam, average];
+    });
+
+    const left = 42;
+    const right = 18;
+    const top = 18;
+    const bottom = 48;
+    const chartW = width - left - right;
+    const chartH = height - top - bottom;
+    const step = chartW / data.length;
+    const barW = Math.min(70, step * 0.55);
+
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.fillStyle = "#6b7280";
+    ctx.font = "11px Segoe UI, sans-serif";
+    ctx.textAlign = "right";
+
+    for (let value = 0; value <= 100; value += 20) {
+        const y = top + chartH - (value / 100) * chartH;
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(width - right, y);
+        ctx.stroke();
+        ctx.fillText(value, left - 8, y + 4);
+    }
+
+    data.forEach(([label, value], index) => {
+        const x = left + step * index + (step - barW) / 2;
+        const barH = (value / 100) * chartH;
+        const y = top + chartH - barH;
+
+        ctx.fillStyle = "#4f46e5";
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, barH, 6);
+        ctx.fill();
+
+        ctx.fillStyle = "#111827";
+        ctx.font = "600 11px Segoe UI, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(value.toFixed(1) + "%", x + barW / 2, Math.max(y - 7, 12));
 
         ctx.fillStyle = "#6b7280";
         ctx.font = "11px Segoe UI, sans-serif";
