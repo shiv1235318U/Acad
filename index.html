@@ -402,9 +402,9 @@
 
                         <select id="examType">
                             <option value="Unit Test">Unit Test</option>
-                            <option value="Half Yearly">Half Yearly</option>
-                            <option value="Pre-Board">Pre-Board</option>
-                            <option value="Final Exam">Final Exam</option>
+                            <option value="Midterm">Midterm</option>
+                            <option value="Pre-Final">Pre-Final</option>
+                            <option value="Final">Final</option>
                         </select>
                     </div>
 
@@ -573,6 +573,20 @@
                 </div>
 
 
+                <div class="form-group report-select">
+
+                    <label>Select Examination</label>
+
+                    <select id="reportExam">
+                        <option value="Unit Test">Unit Test</option>
+                        <option value="Midterm">Midterm</option>
+                        <option value="Pre-Final">Pre-Final</option>
+                        <option value="Final">Final</option>
+                    </select>
+
+                </div>
+
+
                 <div id="reportContent" class="report-content hidden">
 
                     <div class="report-header">
@@ -587,6 +601,8 @@
                             <p id="reportClass">
                                 Class
                             </p>
+
+                            <span id="reportExamName" class="report-exam-badge">Unit Test</span>
                         </div>
 
                         <div class="report-score">
@@ -636,11 +652,24 @@
                         <div class="report-chart-header">
                             <div>
                                 <h3>Subject-wise Performance</h3>
-                                <p>Visual comparison of this student's marks.</p>
+                                <p id="reportChartSubtitle">Marks in the selected examination.</p>
                             </div>
                         </div>
                         <div class="report-chart-container">
                             <canvas id="reportSubjectChart"></canvas>
+                        </div>
+                    </div>
+
+
+                    <div class="report-chart-panel">
+                        <div class="report-chart-header">
+                            <div>
+                                <h3>Exam-wise Performance</h3>
+                                <p>Average marks across Unit Test, Midterm, Pre-Final and Final.</p>
+                            </div>
+                        </div>
+                        <div class="report-chart-container exam-progress-chart">
+                            <canvas id="reportExamChart"></canvas>
                         </div>
                     </div>
 
